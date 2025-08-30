@@ -135,7 +135,7 @@ These are **preliminary results** and will evolve as the dataset, preprocessing,
 - [x] Border removal system (with geometric estimation)
 - [x] MobileNetV3 model training and tuning
 - [ ] Model visualization: false positives/negatives, saliency maps
-- [ ] Deployment via Gradio + Hugging Face Space: 
+- [x] Deployment via Gradio + Hugging Face Space: https://huggingface.co/spaces/sgazagnes/melanoma-detection
 - [ ] Build mobile-friendly UI for real-time image input
 - [ ] Implement embedded/edge-friendly model conversion (ONNX, TFLite)
 - [ ] Publish detailed blog and documentation
