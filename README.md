@@ -4,9 +4,19 @@ A privacy-friendly app to assist individuals in **screening their skin moles** u
 
 ---
 
+> ⚠️ **Critical Disclaimer — Please Read Before Use**
+>
+> This model was trained exclusively on **dermoscopic images** — high-magnification, uniformly lit, clinically captured photographs of skin lesions. These images have very different sharpness, contrast, color profile, and texture compared to photos taken with a standard webcam or smartphone camera.
+>
+> **Inference results on non-dermoscopic images (webcam, phone camera, etc.) should be treated with extreme caution and should NOT be used as a basis for any medical decision.** The model may produce unreliable or misleading predictions on such inputs. Always consult a qualified dermatologist for any skin concern.
+>
+> This tool is intended for research and educational purposes only.
+
+---
+
 ## Project Goal
 
-Skin cancer, especially melanoma, can be deadly if not detected early. The goal of this project is to build a **lightweight, offline-capable mobile/web application** that lets users take a photo of their mole and get an immediate, **AI-powered risk score** — helping raise awareness and encouraging medical consultation when needed.
+Skin cancer, especially melanoma, can be deadly if not detected early. The goal of this project is to build a **lightweight, offline-capable application** that lets users scan a mole and get an immediate, **AI-powered risk score** — helping raise awareness and encouraging medical consultation when needed.
 
 The core of the system is a **neural network trained to classify skin lesions as benign or malignant** using real dermatology datasets.
 
@@ -24,8 +34,9 @@ We currently use ~45,000 dermatoscopic images from the following sources:
    - High-quality dermoscopic images and pixel-level annotations
    - ISIC 2016: 900 images
    - ISIC 2020: 33,000+ images
-All datasets have two classes: `benign`, `malignant`
-The datasets were **merged**, deduplicated (using perceptual hashing), and curated into a single unified dataset. 
+
+All datasets have two classes: `benign`, `malignant`.
+The datasets were **merged**, deduplicated (using perceptual hashing), and curated into a single unified dataset.
 
 ---
 
@@ -43,8 +54,8 @@ The pipeline handles several key image preparation steps:
 3. **Hair Removal (optional)**
    - Filters or inpainting-based methods to remove hair artifacts were explored and evaluated.
 
-4. **Data augmentation**
-    - Classical augmentation techniques are used: flipping, rotation, contraste/brightness/saliency variations
+4. **Data Augmentation**
+   - Classical augmentation techniques: flipping, rotation, contrast/brightness/saturation variations.
 
 ---
 
@@ -62,70 +73,81 @@ We use a **MobileNetV3-Small** convolutional neural network, which is:
 |----------------|---------------------|
 | Input size     | 224x224 RGB         |
 | Batch size     | 32                  |
-| Optimizer      | Adam                |
+| Optimizer      | AdamW               |
 | Learning rate  | 1e-4                |
-| Loss function  | BCEWithLogitsLoss   |
-| Epochs         | 10–30 (ongoing tuning) |
-| Class balancing| Weighted sampling for training |
+| Loss function  | BCEWithLogitsLoss (pos_weight balanced) |
+| Epochs         | 10–30 (early stopping on PR-AUC) |
+| Class balancing| Weighted random sampler |
 
 ---
 
+## Results and Evaluation
 
-##  Results and Evaluation
-
-We evaluated the final model on a dedicated test set (15% of the full dataset), separated from the training and validation data.
+We evaluated the final model on a dedicated test set (15% of the full dataset), separated from training and validation data.
 
 ### Dataset Split
 
-| Split     | % of data | Purpose                               |
-| --------- | --------- | ------------------------------------- |
-| **Train** | \~70%     | Model learning and optimization       |
-| **Val.**  | \~15%     | Hyperparameter tuning, early stopping |
-| **Test**  | \~15%     | Final, unbiased performance check     |
+| Split      | % of data | Purpose                               |
+| ---------- | --------- | ------------------------------------- |
+| **Train**  | ~70%      | Model learning and optimization       |
+| **Val.**   | ~15%      | Hyperparameter tuning, early stopping |
+| **Test**   | ~15%      | Final, unbiased performance check     |
 
 ---
 
-###  Confusion Matrix (on Test Set)
+### Confusion Matrix (on Test Set)
 
 ```
                 Predicted
               | Benign | Malignant
     ----------|--------|----------
-    Benign    |  4862  |   267     
-    Malignant |    27  |   756     
+    Benign    |  4862  |   267
+    Malignant |    27  |   756
 ```
 
 ---
 
-###  Classification Report
+### Classification Report
 
-| Class            | Precision | Recall   | F1-score | Support |
-| ---------------- | --------- | -------- | -------- | ------- |
-| Benign           | **0.99**  | 0.95     | 0.97     | 5129    |
-| Malignant        | 0.74      | **0.97** | 0.84     | 783     |
-| Accuracy         |           |          | **0.95** | 5912    |
-| Macro Avg        | 0.87      | 0.96     | 0.90     |         |
-| Weighted Avg     | 0.96      | 0.95     | 0.95     |         |
+| Class         | Precision | Recall   | F1-score | Support |
+| ------------- | --------- | -------- | -------- | ------- |
+| Benign        | **0.99**  | 0.95     | 0.97     | 5129    |
+| Malignant     | 0.74      | **0.97** | 0.84     | 783     |
+| Accuracy      |           |          | **0.95** | 5912    |
+| Macro Avg     | 0.87      | 0.96     | 0.90     |         |
+| Weighted Avg  | 0.96      | 0.95     | 0.95     |         |
 
+- **Accuracy**: 95% of test images correctly classified.
+- **Recall (malignant)**: 97% — nearly all melanoma cases detected.
+- **Precision (malignant)**: 74% — ~26% of positive predictions are false alarms.
 
-- **Accuracy**: The model correctly classified **95%** of test images.
-- **Recall (malignant)**: **97%** — nearly all melanoma cases are detected.
-- **Precision (malignant)**: **74%** — about 26% of positive predictions are false alarms.
-
----
-
-###  Why we prefer more false positives than false negatives
+### Why We Prefer False Positives Over False Negatives
 
 Missing a real cancer case (false negative) is far more dangerous than mistakenly flagging a benign mole (false positive).
 
-- Only 27 malignant images were missed, that's 3.4% of all cancer cases.
-- Meanwhile, 267 benign moles were incorrectly flagged as malignant, 5.2% of all benign moles.
+- Only 27 malignant images were missed — 3.4% of all cancer cases.
+- 267 benign moles were incorrectly flagged — 5.2% of all benign moles.
 
+> These results hold **only on dermoscopic test images**. Performance on webcam or phone images is expected to be significantly lower due to the domain gap described in the disclaimer above.
 
-Note that the app is not meant to replace the consultation of a medical professional — the app will  not be a replacement for diagnosis.
+---
 
+## Real-Time Webcam Pipeline
 
-These are **preliminary results** and will evolve as the dataset, preprocessing, and training improve.
+A real-time inference pipeline (`camera_inference.py`) has been developed to test the model on a live camera stream. It includes:
+
+1. **Auto camera discovery** — scans indices 0–5 to find an available device.
+2. **Mole detection** — blob detection with centroid filtering to locate a mole centered in the frame.
+3. **Sharpness check** — Laplacian variance gate to reject blurry frames.
+4. **Guided capture** — countdown + burst of 15 frames, selects the sharpest one.
+5. **Preprocessing** — tight contour crop + Lanczos upscale + CLAHE contrast enhancement.
+6. **Inference + display** — side-by-side panel showing ROI, tight crop, CLAHE image, label and confidence. Press **N** for a new scan, **Q** to quit.
+
+### Hardware Notes
+
+The pipeline was developed with a **Logitech C270** (fixed focus) and an Android phone via **DroidCam**. Image quality from consumer cameras differs substantially from dermoscopic equipment.
+
+> ⚠️ For more reliable results, a **USB dermatoscope** (e.g. AmScope QS-DERMO) is strongly recommended — it provides the ring lighting and magnification level that matches training data conditions. Predictions from standard webcams or phone cameras should be considered indicative only.
 
 ---
 
@@ -134,11 +156,13 @@ These are **preliminary results** and will evolve as the dataset, preprocessing,
 - [x] Data merging and deduplication
 - [x] Border removal system (with geometric estimation)
 - [x] MobileNetV3 model training and tuning
-- [ ] Model visualization: false positives/negatives, saliency maps
+- [x] Real-time webcam inference pipeline with guided capture
+- [x] CLAHE contrast enhancement to partially close the domain gap
+- [ ] Fine-tuning on phone/webcam images to reduce domain gap
+- [ ] Model visualization: saliency maps, false positive/negative analysis
 - [x] Deployment via Gradio + Hugging Face Space: https://huggingface.co/spaces/sgazagnes/melanoma-detection
 - [ ] Build mobile-friendly UI for real-time image input
-- [ ] Implement embedded/edge-friendly model conversion (ONNX, TFLite)
-- [ ] Publish detailed blog and documentation
+- [ ] Implement edge-friendly model conversion (ONNX, TFLite)
+- [ ] Evaluate with USB dermatoscope hardware
 
 ---
-
