@@ -1,0 +1,19 @@
+name: melanoma-detection
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pytorch
+  - torchvision
+  - pytorch-cuda=12.1  # Remove this line if you don't have an NVIDIA GPU
+  - opencv
+  - pillow
+  - matplotlib
+  - pandas
+  - scikit-learn       # <--- Added this to fix the sklearn imports
+  - pip
+  - pip:
+    - imagehash

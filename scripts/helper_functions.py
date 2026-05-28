@@ -45,26 +45,32 @@ def resize(img_path, max_size=1000, save_over=True):
 
 ## Vignetting
 
-def has_vignette_border(img_path, threshold=0.6):
+def has_vignette_border(img_path, threshold=0.6, img_size=224):
     try:
-        img = Image.open(img_path).convert("L").resize((128, 128))
+        img = Image.open(img_path).convert("L")
         img_np = np.array(img)
+        
+        height, width = img_np.shape
 
-        # Corner patches (10% size)
-        patch_size = 13
+        # Calculate proportional patch sizes, using 10%
+        patch_h = ceil(height * 0.10)
+        patch_w = ceil(width * 0.10)
+        
         corners = [
-            img_np[:patch_size, :patch_size],                    
-            img_np[:patch_size, -patch_size:],                  
-            img_np[-patch_size:, :patch_size],                  
-            img_np[-patch_size:, -patch_size:]                  
+            img_np[:patch_h, :patch_w],                    # Top-Left
+            img_np[:patch_h, -patch_w:],                   # Top-Right
+            img_np[-patch_h:, :patch_w],                   # Bottom-Left
+            img_np[-patch_h:, -patch_w:]                   # Bottom-Right
         ]
 
         border_pixels = np.concatenate([c.flatten() for c in corners])
+        
         # Count near-black or near-white pixels
         mask = (border_pixels < 10) | (border_pixels > 245)
         return np.mean(mask) > threshold
-    except:
-        print(f"Error processing {img_path}")
+        
+    except Exception as e:
+        print(f"Error processing {img_path}: {e}")
         return False
 
     
@@ -82,7 +88,7 @@ def crop_to_detected_circle(img_path, min_shrink=0.6, max_shrink=0.95):
     gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
     gray = cv2.medianBlur(gray, 3)
 
-    # === Try detecting a circle ===
+    # === Try detecting a circle with Hough method ===
     try:
         circles = cv2.HoughCircles(
             gray, cv2.HOUGH_GRADIENT, dp=1.2, minDist=min(h, w) // 2,
@@ -92,18 +98,20 @@ def crop_to_detected_circle(img_path, min_shrink=0.6, max_shrink=0.95):
         )
     except cv2.error:
         circles = None
+        return Image.fromarray(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB))
 
-    # === Fallback to contour circle ===
-    if circles is not None:
-        x, y, r = circles[0][0]
-    else:
-        edges = cv2.Canny(gray, 50, 150)
-        cnts, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        if cnts:
-            (x, y), r = cv2.minEnclosingCircle(max(cnts, key=cv2.contourArea))
-        else:
-            # fallback: center crop with preserved aspect ratio
-            return Image.fromarray(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB))
+
+    # # === Fallback to contour circle ===
+    # if circles is not None:
+    #     x, y, r = circles[0][0]
+    # else:
+    #     edges = cv2.Canny(gray, 50, 150)
+    #     cnts, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    #     if cnts:
+    #         (x, y), r = cv2.minEnclosingCircle(max(cnts, key=cv2.contourArea))
+    #     else:
+    #         # fallback: center crop with preserved aspect ratio
+    #         return Image.fromarray(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB))
 
     # === Shrink factor based on radius ===
     r = float(r)
@@ -129,70 +137,70 @@ def crop_to_detected_circle(img_path, min_shrink=0.6, max_shrink=0.95):
     cropped = img_bgr[y1:y2, x1:x2]
     return Image.fromarray(cv2.cvtColor(cropped, cv2.COLOR_BGR2RGB))
 
-def crop_border(img_path):
-    """
-    Efficiently crops circular black or white borders from the image,
-    preserving the aspect ratio.
-    """
-    # Load image
-    img = cv2.imread(img_path)
-    if img is None:
-        return Image.open(img_path)
+# def crop_border(img_path):
+#     """
+#     Efficiently crops circular black or white borders from the image,
+#     preserving the aspect ratio.
+#     """
+#     # Load image
+#     img = cv2.imread(img_path)
+#     if img is None:
+#         return Image.open(img_path)
 
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    h, w = gray.shape
+#     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+#     h, w = gray.shape
 
-    # 1. Detect border type (black or white) using corners
-    corners = [
-        gray[0, 0],
-        gray[0, -1],
-        gray[-1, 0],
-        gray[-1, -1]
-    ]
-    avg_corner = np.mean(corners)
-    border_type = 'black' if avg_corner < 100 else 'white'
+#     # 1. Detect border type (black or white) using corners
+#     corners = [
+#         gray[0, 0],
+#         gray[0, -1],
+#         gray[-1, 0],
+#         gray[-1, -1]
+#     ]
+#     avg_corner = np.mean(corners)
+#     border_type = 'black' if avg_corner < 100 else 'white'
 
-    # 2. Create mask of border (black: low values, white: high values)
-    if border_type == 'black':
-        mask = gray > 30  # keep pixels that are not black
-    else:
-        mask = gray < 225  # keep pixels that are not white
+#     # 2. Create mask of border (black: low values, white: high values)
+#     if border_type == 'black':
+#         mask = gray > 30  # keep pixels that are not black
+#     else:
+#         mask = gray < 225  # keep pixels that are not white
 
-    # 3. Distance transform from center outwards
-    center_y, center_x = h // 2, w // 2
-    yy, xx = np.ogrid[:h, :w]
-    dist_from_center = np.sqrt((yy - center_y)**2 + (xx - center_x)**2)
+#     # 3. Distance transform from center outwards
+#     center_y, center_x = h // 2, w // 2
+#     yy, xx = np.ogrid[:h, :w]
+#     dist_from_center = np.sqrt((yy - center_y)**2 + (xx - center_x)**2)
 
-    # 4. Masked region (non-border), compute max usable radius
-    usable_mask = mask.astype(np.uint8)
-    usable_coords = np.where(usable_mask)
-    usable_dists = dist_from_center[usable_coords]
-    print(usable_dists)
-    if len(usable_dists) == 0:
-        return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))  # fallback: no crop
+#     # 4. Masked region (non-border), compute max usable radius
+#     usable_mask = mask.astype(np.uint8)
+#     usable_coords = np.where(usable_mask)
+#     usable_dists = dist_from_center[usable_coords]
+#     print(usable_dists)
+#     if len(usable_dists) == 0:
+#         return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))  # fallback: no crop
 
-    max_r = np.percentile(usable_dists, 99)  # avoid outliers
+#     max_r = np.percentile(usable_dists, 99)  # avoid outliers
 
-    # 5. Compute box that fits inside max_r and matches aspect ratio
-    img_ratio = w / h
-    box_h = int(2 * max_r / np.sqrt(1 + img_ratio**2))
-    box_w = int(box_h * img_ratio)
-    print(box_h,box_w)
-    # Ensure bounds
-    box_h = min(box_h, h) #- int(0.1*h)
-    box_w = min(box_w, w) #- int(0.1*w)
+#     # 5. Compute box that fits inside max_r and matches aspect ratio
+#     img_ratio = w / h
+#     box_h = int(2 * max_r / np.sqrt(1 + img_ratio**2))
+#     box_w = int(box_h * img_ratio)
+#     print(box_h,box_w)
+#     # Ensure bounds
+#     box_h = min(box_h, h) #- int(0.1*h)
+#     box_w = min(box_w, w) #- int(0.1*w)
 
-    y1 = max(center_y - box_h // 2, 0)
-    y2 = y1 + box_h
-    x1 = max(center_x - box_w // 2, 0)
-    x2 = x1 + box_w
+#     y1 = max(center_y - box_h // 2, 0)
+#     y2 = y1 + box_h
+#     x1 = max(center_x - box_w // 2, 0)
+#     x2 = x1 + box_w
 
-    print(x1,x2,y1,y2)
-    # 6. Crop and return
-    cropped = img[y1:y2, x1:x2]
-    # cropped = img[x1:x2,y1:y2]
+#     print(x1,x2,y1,y2)
+#     # 6. Crop and return
+#     cropped = img[y1:y2, x1:x2]
+#     # cropped = img[x1:x2,y1:y2]
 
-    return Image.fromarray(cv2.cvtColor(cropped, cv2.COLOR_BGR2RGB))
+#     return Image.fromarray(cv2.cvtColor(cropped, cv2.COLOR_BGR2RGB))
 
 ## Hair removal 
 def remove_hair(img):

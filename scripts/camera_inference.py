@@ -82,7 +82,7 @@ def detect_mole(roi):
     roi_area    = 3.14 * ROI_RADIUS**2 / 5
     perimeter   = cv2.arcLength(largest, True)
     circularity = (4 * np.pi * area / (perimeter ** 2)) if perimeter > 0 else 0
-    is_mole = 0.005 < area / roi_area < 0.60 and circularity > 0.2
+    is_mole = 0.0005 < area / roi_area < 0.60 and circularity > 0.1
     return is_mole, largest
 
 def sharpness(roi):

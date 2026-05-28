@@ -1,0 +1,13 @@
+# Core Deep Learning & Computer Vision
+torch
+torchvision
+
+# Image & Video Processing
+opencv-python
+Pillow
+imagehash
+
+# Data Analysis & Plotting
+numpy
+pandas
+matplotlib

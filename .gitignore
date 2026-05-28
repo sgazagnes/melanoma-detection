@@ -3,3 +3,5 @@
 /ModelMole copy.ipynb
 /data
 /__pycache__
+.conda/
+anaconda_projects/
