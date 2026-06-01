@@ -38,6 +38,7 @@ We currently use ~45,000 dermatoscopic images from the following sources:
 All datasets have two classes: `benign`, `malignant`.
 The datasets were **merged**, deduplicated (using perceptual hashing), and curated into a single unified dataset of approx 40000 images.
 The combined data is available on Zenodo: https://doi.org/10.5281/zenodo.20485367
+
 ---
 
 ## Preprocessing Pipeline
