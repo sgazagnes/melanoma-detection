@@ -135,18 +135,16 @@ Missing a real cancer case (false negative) is far more dangerous than mistakenl
 
 A real-time inference pipeline (`camera_inference.py`) has been developed to test the model on a live camera stream. It includes:
 
-1. **Auto camera discovery** — scans indices 0–5 to find an available device.
+1. **Auto camera discovery** — scans to find an available device.
 2. **Mole detection** — blob detection with centroid filtering to locate a mole centered in the frame.
 3. **Sharpness check** — Laplacian variance gate to reject blurry frames.
 4. **Guided capture** — countdown + burst of 15 frames, selects the sharpest one.
-5. **Preprocessing** — tight contour crop + Lanczos upscale + CLAHE contrast enhancement.
+5. **Preprocessing** — tight contour crop + Lanczos upscale + contrast enhancement.
 6. **Inference + display** — side-by-side panel showing ROI, tight crop, CLAHE image, label and confidence. Press **N** for a new scan, **Q** to quit.
 
 ### Hardware Notes
 
-The pipeline was developed with a **Logitech C270** (fixed focus) and an Android phone via **DroidCam**. Image quality from consumer cameras differs substantially from dermoscopic equipment.
-
-> ⚠️ For more reliable results, a **USB dermatoscope** is strongly recommended — it provides the ring lighting and magnification level that matches training data conditions. Predictions from standard webcams or phone cameras should be considered indicative only.
+The pipeline was developed with a **Logitech C270** (fixed focus) and an Android phone via **DroidCam**. Image quality from consumer cameras differs substantially from dermoscopic equipment.For more reliable results, a **USB dermatoscope** should be used. Predictions from standard webcams or phone cameras should be considered indicative only. Again, this project is meant for Deep Learning courses, and predictions should be taken with caution.
 
 ---
 
