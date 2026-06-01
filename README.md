@@ -36,7 +36,7 @@ We currently use ~45,000 dermatoscopic images from the following sources:
    - ISIC 2020: 33,000+ images
 
 All datasets have two classes: `benign`, `malignant`.
-The datasets were **merged**, deduplicated (using perceptual hashing), and curated into a single unified dataset.
+The datasets were **merged**, deduplicated (using perceptual hashing), and curated into a single unified dataset of approx 40000 images.
 
 ---
 
@@ -48,8 +48,7 @@ The pipeline handles several key image preparation steps:
    - Images with identical content (via hash matching) are removed to avoid bias.
 
 2. **Vignette Border Detection & Cropping**
-   - Many dermatoscopic images include circular black/white borders.
-   - A smart cropping technique estimates the radius and removes the border **while preserving aspect ratio**.
+   - Many dermatoscopic images include circular black/white borders. A smart cropping technique estimates the radius and removes the border while preserving aspect ratio.
 
 3. **Hair Removal (optional)**
    - Filters or inpainting-based methods to remove hair artifacts were explored and evaluated.
@@ -69,7 +68,7 @@ We use a **MobileNetV3-Small** convolutional neural network, which is:
 
 ### Training Parameters
 
-| Parameter       | Value               |
+| Parameter      | Value               |
 |----------------|---------------------|
 | Input size     | 224x224 RGB         |
 | Batch size     | 32                  |
@@ -91,7 +90,7 @@ We evaluated the final model on a dedicated test set (15% of the full dataset), 
 | ---------- | --------- | ------------------------------------- |
 | **Train**  | ~70%      | Model learning and optimization       |
 | **Val.**   | ~15%      | Hyperparameter tuning, early stopping |
-| **Test**   | ~15%      | Final, unbiased performance check     |
+| **Test**   | ~15%      | Final performance check               |
 
 ---
 
@@ -147,7 +146,7 @@ A real-time inference pipeline (`camera_inference.py`) has been developed to tes
 
 The pipeline was developed with a **Logitech C270** (fixed focus) and an Android phone via **DroidCam**. Image quality from consumer cameras differs substantially from dermoscopic equipment.
 
-> ⚠️ For more reliable results, a **USB dermatoscope** (e.g. AmScope QS-DERMO) is strongly recommended — it provides the ring lighting and magnification level that matches training data conditions. Predictions from standard webcams or phone cameras should be considered indicative only.
+> ⚠️ For more reliable results, a **USB dermatoscope** is strongly recommended — it provides the ring lighting and magnification level that matches training data conditions. Predictions from standard webcams or phone cameras should be considered indicative only.
 
 ---
 
@@ -163,6 +162,5 @@ The pipeline was developed with a **Logitech C270** (fixed focus) and an Android
 - [x] Deployment via Gradio + Hugging Face Space: https://huggingface.co/spaces/sgazagnes/melanoma-detection
 - [ ] Build mobile-friendly UI for real-time image input
 - [ ] Implement edge-friendly model conversion (ONNX, TFLite)
-- [ ] Evaluate with USB dermatoscope hardware
 
 ---
