@@ -1,0 +1,2 @@
+dataset,recipe_used,decision_threshold,accuracy,malignant_precision,malignant_recall,malignant_f1_score,benign_precision,benign_recall
+PAD-UFES-20_Smartphone,baseline,0.53,0.5831157528285466,0.5511319281811085,0.6483011937557392,0.5957805907172996,0.6234021632251721,0.5244003308519437

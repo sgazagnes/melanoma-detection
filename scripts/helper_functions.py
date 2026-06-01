@@ -101,17 +101,17 @@ def crop_to_detected_circle(img_path, min_shrink=0.6, max_shrink=0.95):
         return Image.fromarray(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB))
 
 
-    # # === Fallback to contour circle ===
-    # if circles is not None:
-    #     x, y, r = circles[0][0]
-    # else:
-    #     edges = cv2.Canny(gray, 50, 150)
-    #     cnts, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    #     if cnts:
-    #         (x, y), r = cv2.minEnclosingCircle(max(cnts, key=cv2.contourArea))
-    #     else:
-    #         # fallback: center crop with preserved aspect ratio
-    #         return Image.fromarray(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB))
+    # === Fallback to contour circle ===
+    if circles is not None:
+        x, y, r = circles[0][0]
+    else:
+        edges = cv2.Canny(gray, 50, 150)
+        cnts, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if cnts:
+            (x, y), r = cv2.minEnclosingCircle(max(cnts, key=cv2.contourArea))
+        else:
+            # fallback: center crop with preserved aspect ratio
+            return Image.fromarray(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB))
 
     # === Shrink factor based on radius ===
     r = float(r)
