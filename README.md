@@ -154,11 +154,10 @@ The pipeline was developed with a **Logitech C270** (fixed focus) and an Android
 - [x] Border removal system (with geometric estimation)
 - [x] MobileNetV3 model training and tuning
 - [x] Real-time webcam inference pipeline with guided capture
-- [x] CLAHE contrast enhancement to partially close the domain gap
-- [ ] Fine-tuning on phone/webcam images to reduce domain gap
-- [ ] Model visualization: saliency maps, false positive/negative analysis
+- [ ] Include phone/webcam images to reduce domain gap
+- [ ] Model visualization with saliency maps
 - [x] Deployment via Gradio + Hugging Face Space: https://huggingface.co/spaces/sgazagnes/melanoma-detection
 - [ ] Build mobile-friendly UI for real-time image input
-- [ ] Implement edge-friendly model conversion (ONNX, TFLite)
+- [ ] Implement edge-friendly model conversion (ONNX, TFLite) and put on a Raspberry Pi
 
 ---
