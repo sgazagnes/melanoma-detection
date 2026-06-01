@@ -4,13 +4,13 @@ A privacy-friendly app to assist individuals in **screening their skin moles** u
 
 ---
 
-> ⚠️ **Critical Disclaimer — Please Read Before Use**
+> ⚠️ **Critical Disclaimer**
 >
 > This model was trained exclusively on **dermoscopic images** — high-magnification, uniformly lit, clinically captured photographs of skin lesions. These images have very different sharpness, contrast, color profile, and texture compared to photos taken with a standard webcam or smartphone camera.
 >
 > **Inference results on non-dermoscopic images (webcam, phone camera, etc.) should be treated with extreme caution and should NOT be used as a basis for any medical decision.** The model may produce unreliable or misleading predictions on such inputs. Always consult a qualified dermatologist for any skin concern.
 >
-> This tool is intended for research and educational purposes only.
+> This project was intended for research and educational purposes only.
 
 ---
 
